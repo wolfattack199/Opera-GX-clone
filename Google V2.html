@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No-Name</title>
+    <style>
+        :root {
+            --primary-color: #39ffd7;
+            --secondary-color: #9900ff;
+            --bg-dark: #000000;
+            --bg-gradient: radial-gradient(circle, #000000, #012c2a);
+            --text-color: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --glass-bg: rgba(0, 255, 255, 0.1);
+            --glass-border: rgba(57, 255, 215, 0.3);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+        }
+
+        /* Animated Background */
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: var(--bg-gradient);
+        }
+
+        .star {
+            position: absolute;
+            background: var(--primary-color);
+            border-radius: 50%;
+            opacity: 0;
+            animation: sparkle 3s infinite ease-in-out;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0) translate(0, 0); }
+            50% { opacity: 0.8; transform: scale(1) translate(20px, -20px); }
+        }
+
+        /* Main UI Container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            max-width: 500px;
+            width: 90%;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        /* Input and Button Styling */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(57, 255, 215, 0.2);
+        }
+
+        .launch-btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .launch-btn:hover {
+            filter: brightness(1.2);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 114, 255, 0.4);
+        }
+
+        .launch-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Floating Menu */
+        #proxy-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid var(--primary-color);
+            border-radius: 10px;
+            width: 220px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            cursor: move;
+            display: none; /* Hidden until proxy is launched */
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+            pointer-events: none;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 20px;
+            pointer-events: auto;
+        }
+
+        .close-btn:hover {
+            color: #ff4b2b;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            opacity: 0.7;
+        }
+
+        .footer a:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="background"></div>
+
+    <div class="container">
+        <div class="glass-panel">
+            <h1>ByeBlocker</h1>
+            <p>Enter a URL to browse</p>
+            
+            <div class="input-group">
+                <input type="text" id="url-input" placeholder="https://example.com" autofocus>
+                <button class="launch-btn" id="launch-trigger">Launch</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="proxy-menu">
+        <div class="menu-header">
+            <span style="font-size: 12px; font-weight: bold; color: var(--primary-color);">PROXY CONTROLS</span>
+            <span class="close-btn" id="close-menu">&times;</span>
+        </div>
+        <button class="launch-btn" style="width: 100%; font-size: 12px; padding: 8px;" onclick="location.reload()">Exit Proxy</button>
+    </div>
+
+    <div class="footer">
+        Created by <a href="https://github.com/Tacogamerman" target="_blank">Tacogamerman</a>
+    </div>
+
+    <script>
+        // Store proxy URL globally
+        let currentProxyUrl = null;
+        const proxyAPI = 'https://api.codetabs.com/v1/proxy?quest=';
+
+        // Star Generation
+        const numStars = 150;
+        const background = document.getElementById('background');
+        
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            const size = Math.random() * 3;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            star.style.animationDelay = `${Math.random() * 5}s`;
+            star.style.animationDuration = `${2 + Math.random() * 3}s`;
+            background.appendChild(star);
+        }
+
+        // Proxy Logic
+        const launchBtn = document.getElementById('launch-trigger');
+        const urlInput = document.getElementById('url-input');
+        const proxyMenu = document.getElementById('proxy-menu');
+        const closeMenu = document.getElementById('close-menu');
+
+        function normalizeUrl(url) {
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            return url;
+        }
+
+        function launchProxy() {
+            let link = urlInput.value.trim();
+            if (!link) return;
+            
+            link = normalizeUrl(link);
+            currentProxyUrl = link;
+
+            // Show loading state
+            launchBtn.innerText = 'Loading...';
+            launchBtn.disabled = true;
+
+            fetch(proxyAPI + encodeURIComponent(link))
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(text => {
+                    // Prepare the document for the proxied content
+                    document.open();
+                    document.write(text);
+                    document.close();
+
+                    // Inject base tag to help with relative resources
+                    const base = document.createElement('base');
+                    base.href = link;
+                    document.head.appendChild(base);
+
+                    // Setup navigation interception
+                    setupNavigationInterception(link);
+
+                    // Re-inject the control menu into the new document
+                    injectControlMenu(link);
+                })
+                .catch(err => {
+                    console.error('Proxy error:', err);
+                    alert('Failed to load the page through proxy. It might be blocked or the URL is invalid.');
+                    launchBtn.innerText = 'Launch Proxy';
+                    launchBtn.disabled = false;
+                });
+        }
+
+        function setupNavigationInterception(baseUrl) {
+            // Intercept all link clicks
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (!link) return;
+
+                e.preventDefault();
+                let href = link.getAttribute('href');
+                
+                if (!href || href === '#' || href.startsWith('javascript:')) {
+                    return;
+                }
+
+                // Resolve relative URLs
+                const absoluteUrl = new URL(href, baseUrl).href;
+                
+                // Load through proxy
+                loadPageThroughProxy(absoluteUrl);
+            }, true);
+
+            // Intercept form submissions
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                e.preventDefault();
+
+                let action = form.getAttribute('action') || baseUrl;
+                const method = (form.getAttribute('method') || 'GET').toUpperCase();
+
+                // Resolve relative action URLs
+                action = new URL(action, baseUrl).href;
+
+                if (method === 'GET') {
+                    const formData = new FormData(form);
+                    const params = new URLSearchParams(formData);
+                    const fullUrl = action + (action.includes('?') ? '&' : '?') + params.toString();
+                    loadPageThroughProxy(fullUrl);
+                } else if (method === 'POST') {
+                    const formData = new FormData(form);
+                    
+                    fetch(proxyAPI + encodeURIComponent(action), {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(text => {
+                        document.open();
+                        document.write(text);
+                        document.close();
+
+                        const base = document.createElement('base');
+                        base.href = action;
+                        document.head.appendChild(base);
+
+                        setupNavigationInterception(action);
+                        injectControlMenu(action);
+                    })
+                    .catch(err => console.error('Form submission error:', err));
+                }
+            }, true);
+        }
+
+        function loadPageThroughProxy(url) {
+            url = normalizeUrl(url);
+            currentProxyUrl = url;
+
+            fetch(proxyAPI + encodeURIComponent(url))
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(text => {
+                    document.open();
+                    document.write(text);
+                    document.close();
+
+                    const base = document.createElement('base');
+                    base.href = url;
+                    document.head.appendChild(base);
+
+                    setupNavigationInterception(url);
+                    injectControlMenu(url);
+                })
+                .catch(err => console.error('Proxy load error:', err));
+        }
+
+        function injectControlMenu(originalUrl) {
+            const oldMenu = document.getElementById('injected-menu');
+            if (oldMenu) oldMenu.remove();
+
+            const menu = document.createElement('div');
+            menu.innerHTML = `
+                <div id="injected-menu" style="position:fixed; top:10px; right:10px; z-index:2147483647; background:rgba(0,0,0,0.85); color:white; padding:10px; border-radius:8px; border:1px solid #39ffd7; font-family:sans-serif; width:180px; box-shadow:0 0 15px rgba(0,0,0,0.5);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:10px; color:#39ffd7;">
+                        <span>BYEBLOCKER ACTIVE</span>
+                        <span id="close-injected" style="cursor:pointer;">&times;</span>
+                    </div>
+                    <div style="font-size:11px; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.7;">${originalUrl}</div>
+                    <button onclick="location.reload()" style="width:100%; background:#39ffd7; color:black; border:none; padding:5px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;">EXIT PROXY</button>
+                </div>
+            `;
+            document.body.appendChild(menu);
+            
+            const closeBtn = document.getElementById('close-injected');
+            if (closeBtn) {
+                closeBtn.onclick = () => {
+                    const el = document.getElementById('injected-menu');
+                    if (el) el.remove();
+                };
+            }
+
+            const el = document.getElementById('injected-menu');
+            if (el) {
+                let isDragging = false;
+                let offset = { x: 0, y: 0 };
+
+                el.onmousedown = (e) => {
+                    if (e.target.id === 'close-injected') return;
+                    isDragging = true;
+                    offset.x = e.clientX - el.offsetLeft;
+                    offset.y = e.clientY - el.offsetTop;
+                };
+
+                document.onmousemove = (e) => {
+                    if (!isDragging) return;
+                    el.style.left = (e.clientX - offset.x) + 'px';
+                    el.style.top = (e.clientY - offset.y) + 'px';
+                    el.style.right = 'auto';
+                };
+
+                document.onmouseup = () => isDragging = false;
+            }
+        }
+
+        launchBtn.onclick = launchProxy;
+        urlInput.onkeypress = (e) => { if (e.key === 'Enter') launchProxy(); };
+
+        // Draggable logic for the initial menu (if visible)
+        let isDragging = false;
+        let mouseOffset = { x: 0, y: 0 };
+
+        proxyMenu.onmousedown = function(e) {
+            if (e.target === closeMenu) return;
+            isDragging = true;
+            mouseOffset.x = e.pageX - proxyMenu.offsetLeft;
+            mouseOffset.y = e.pageY - proxyMenu.offsetTop;
+        };
+
+        document.onmousemove = function(e) {
+            if (isDragging) {
+                proxyMenu.style.left = (e.pageX - mouseOffset.x) + 'px';
+                proxyMenu.style.top = (e.pageY - mouseOffset.y) + 'px';
+                proxyMenu.style.right = 'auto';
+            }
+        };
+
+        document.onmouseup = function() { isDragging = false; };
+        closeMenu.onclick = () => proxyMenu.style.display = 'none';
+    </script>
+</body>
+</html>

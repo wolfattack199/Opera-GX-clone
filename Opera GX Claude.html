@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free search</title>
+
+    <link rel="icon" href="Loxy.jpg" type="image/png">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --gx-red: #fa1e4e;
+            --gx-dark-red: #8c102b;
+            --bg-main: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-accent: #252525;
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+            --border-color: #333333;
+            --vpn-on: #00ff88;
+            --vpn-stealth: #00d4ff;
+            --vpn-secure: #ffaa00;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Tab Bar --- */
+        .tab-bar {
+            background-color: var(--bg-main);
+            display: flex;
+            align-items: flex-end;
+            padding: 8px 8px 0 8px;
+            gap: 4px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            background-color: var(--bg-secondary);
+            padding: 8px 16px;
+            border-radius: 8px 8px 0 0;
+            min-width: 120px;
+            max-width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 13px;
+            border: 1px solid transparent;
+            border-bottom: none;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .tab.active {
+            background-color: var(--bg-accent);
+            border-color: var(--border-color);
+            border-top: 2px solid var(--gx-red);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: var(--bg-accent);
+        }
+
+        .tab-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 8px;
+        }
+
+        .close-tab {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            opacity: 0.6;
+        }
+
+        .close-tab:hover {
+            background-color: var(--gx-red);
+            opacity: 1;
+        }
+
+        .add-tab {
+            padding: 8px;
+            cursor: pointer;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+        }
+
+        .add-tab:hover {
+            color: var(--text-main);
+        }
+
+        /* --- Toolbar --- */
+        .toolbar {
+            background-color: var(--bg-accent);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: var(--text-main);
+        }
+
+        .address-bar-container {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .address-bar {
+            width: 100%;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 6px 16px 6px 36px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .address-bar:focus {
+            border-color: var(--gx-red);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            color: var(--text-dim);
+        }
+
+        .vpn-badge {
+            position: absolute;
+            right: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: var(--border-color);
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .vpn-badge.active {
+            background-color: var(--vpn-on);
+            color: #000;
+            box-shadow: 0 0 10px var(--vpn-on);
+        }
+        
+        .vpn-badge.stealth {
+            background-color: var(--vpn-stealth);
+            color: #000;
+            box-shadow: 0 0 10px var(--vpn-stealth);
+        }
+        
+        .vpn-badge.secure {
+            background-color: var(--vpn-secure);
+            color: #000;
+            box-shadow: 0 0 10px var(--vpn-secure);
+        }
+
+        .settings-btn {
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+
+        .settings-btn:hover {
+            color: var(--gx-red);
+        }
+
+        /* GX Corner Button */
+        .gx-corner-btn {
+            background: linear-gradient(135deg, var(--gx-red), var(--gx-dark-red));
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(250, 30, 78, 0.3);
+        }
+
+        .gx-corner-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(250, 30, 78, 0.5);
+        }
+
+        /* --- Browser Content --- */
+        .browser-content {
+            flex-grow: 1;
+            position: relative;
+            background-color: #fff;
+        }
+
+        .tab-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            border: none;
+        }
+
+        .tab-view.active {
+            display: block;
+        }
+
+        /* --- GX Corner Panel --- */
+        .gx-corner-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 450px;
+            height: 100vh;
+            background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-main));
+            border-left: 2px solid var(--gx-red);
+            box-shadow: -5px 0 30px rgba(0,0,0,0.8);
+            z-index: 10000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .gx-corner-panel.open {
+            right: 0;
+        }
+
+        .gx-corner-header {
+            background: linear-gradient(135deg, var(--gx-red), var(--gx-dark-red));
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .gx-corner-title {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-gx-corner {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-gx-corner:hover {
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
+
+        .gx-corner-content {
+            padding: 20px;
+        }
+
+        .gx-section {
+            margin-bottom: 30px;
+        }
+
+        .gx-section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--gx-red);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gx-card {
+            background: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gx-card:hover {
+            border-color: var(--gx-red);
+            transform: translateX(-5px);
+            box-shadow: 5px 0 15px rgba(250, 30, 78, 0.2);
+        }
+
+        .gx-card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .gx-card-meta {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .gx-card-description {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+
+        .gx-badge {
+            display: inline-block;
+            background: var(--gx-red);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        .gx-badge.deal {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .gx-badge.new {
+            background: #ffaa00;
+            color: #000;
+        }
+
+        .release-calendar-item {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .release-date {
+            background: var(--gx-red);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 60px;
+        }
+
+        .release-date-day {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .release-date-month {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .game-info {
+            flex: 1;
+        }
+
+        .trending-game {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .trending-number {
+            background: linear-gradient(135deg, var(--gx-red), var(--gx-dark-red));
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .game-thumbnail {
+            width: 60px;
+            height: 60px;
+            background: var(--bg-main);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .tabs-gx {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .tab-gx {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .tab-gx:hover {
+            background: var(--bg-accent);
+            color: var(--text-main);
+        }
+
+        .tab-gx.active {
+            background: var(--gx-red);
+            color: white;
+        }
+
+        /* --- Home Screen --- */
+        .home-screen {
+            background-color: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #background-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .logo-container {
+            text-align: center;
+            z-index: 1;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 72px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--gx-red), #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .shortcuts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            z-index: 1;
+            margin-top: 20px;
+        }
+
+        .shortcut {
+            background-color: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .shortcut:hover {
+            border-color: var(--gx-red);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(250, 30, 78, 0.3);
+        }
+
+        .shortcut-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .shortcut-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* --- Settings Panel --- */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            border-left: 2px solid var(--gx-red);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            transition: right 0.3s;
+            z-index: 9999;
+            overflow-y: auto;
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-header {
+            background: linear-gradient(135deg, var(--gx-red), var(--gx-dark-red));
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-header h2 {
+            font-size: 24px;
+        }
+
+        .close-settings {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .settings-content {
+            padding: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-group:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--gx-red);
+            border-color: var(--gx-red);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .vpn-modes {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--gx-red);
+        }
+
+        .mode-btn.active {
+            background-color: var(--gx-red);
+            border-color: var(--gx-red);
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: var(--gx-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--gx-dark-red);
+        }
+    </style>
+</head>
+<body>
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <div id="tabs-container"></div>
+        <div class="add-tab" id="add-tab">
+            <i data-lucide="plus"></i>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button class="nav-btn" id="home-btn">
+                <i data-lucide="home"></i>
+            </button>
+            <button class="nav-btn" id="refresh-btn">
+                <i data-lucide="rotate-cw"></i>
+            </button>
+        </div>
+
+        <div class="address-bar-container">
+            <i class="search-icon" data-lucide="search"></i>
+            <input type="text" class="address-bar" id="address-bar" placeholder="Search or enter URL">
+            <div class="vpn-badge" id="vpn-badge">VPN</div>
+        </div>
+
+        <button class="gx-corner-btn" id="gx-corner-btn">
+            <i data-lucide="gamepad-2"></i>
+            GX CORNER
+        </button>
+
+        <div class="settings-btn" id="settings-btn">
+            <i data-lucide="settings"></i>
+        </div>
+    </div>
+
+    <!-- Browser Content -->
+    <div class="browser-content" id="browser-content"></div>
+
+    <!-- GX Corner Panel -->
+    <div class="gx-corner-panel" id="gx-corner-panel">
+        <div class="gx-corner-header">
+            <div class="gx-corner-title">
+                <i data-lucide="gamepad-2"></i>
+                GX CORNER
+            </div>
+            <button class="close-gx-corner" id="close-gx-corner">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="gx-corner-content">
+            <div class="tabs-gx">
+                <button class="tab-gx active" data-tab="news">News</button>
+                <button class="tab-gx" data-tab="deals">Deals</button>
+                <button class="tab-gx" data-tab="calendar">Calendar</button>
+                <button class="tab-gx" data-tab="trending">Trending</button>
+            </div>
+
+            <!-- News Tab -->
+            <div class="gx-tab-content" id="gx-tab-news">
+                <div class="gx-section">
+                    <div class="gx-section-title">
+                        <i data-lucide="newspaper"></i>
+                        Latest Gaming News
+                    </div>
+
+                    <div class="gx-card">
+                        <span class="gx-badge new">NEW</span>
+                        <div class="gx-card-title">Epic Games Announces New AAA Title</div>
+                        <div class="gx-card-meta">2 hours ago · Gaming News</div>
+                        <div class="gx-card-description">
+                            A groundbreaking new game is coming from Epic Games, featuring revolutionary gameplay mechanics and stunning visuals.
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="gx-card-title">Steam Winter Sale Breaks Records</div>
+                        <div class="gx-card-meta">5 hours ago · Industry</div>
+                        <div class="gx-card-description">
+                            This year's Steam Winter Sale has surpassed all previous records with unprecedented discounts on thousands of titles.
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <span class="gx-badge">HOT</span>
+                        <div class="gx-card-title">New Graphics Card Benchmarks Released</div>
+                        <div class="gx-card-meta">1 day ago · Hardware</div>
+                        <div class="gx-card-description">
+                            Latest GPU benchmarks show impressive performance gains for gaming at 4K resolution.
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="gx-card-title">Esports Championship Finals This Weekend</div>
+                        <div class="gx-card-meta">1 day ago · Esports</div>
+                        <div class="gx-card-description">
+                            The biggest esports event of the year culminates this weekend with a $5M prize pool.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deals Tab -->
+            <div class="gx-tab-content" id="gx-tab-deals" style="display: none;">
+                <div class="gx-section">
+                    <div class="gx-section-title">
+                        <i data-lucide="tag"></i>
+                        Hot Deals
+                    </div>
+
+                    <div class="gx-card">
+                        <span class="gx-badge deal">-75%</span>
+                        <div class="gx-card-title">Cyberpunk 2077</div>
+                        <div class="gx-card-meta">$14.99 (was $59.99) · Ends in 2 days</div>
+                        <div class="gx-card-description">
+                            Open-world action-adventure game set in Night City. Experience the future of gaming.
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <span class="gx-badge deal">-50%</span>
+                        <div class="gx-card-title">Red Dead Redemption 2</div>
+                        <div class="gx-card-meta">$29.99 (was $59.99) · Ends in 5 days</div>
+                        <div class="gx-card-description">
+                            Epic tale of life in America's unforgiving heartland. Winner of over 175 Game of the Year Awards.
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <span class="gx-badge deal">-60%</span>
+                        <div class="gx-card-title">The Witcher 3: Wild Hunt</div>
+                        <div class="gx-card-meta">$15.99 (was $39.99) · Ends in 3 days</div>
+                        <div class="gx-card-description">
+                            Story-driven open world RPG. Hunt down the child of prophecy in a visually stunning fantasy universe.
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <span class="gx-badge deal">-80%</span>
+                        <div class="gx-card-title">Portal Bundle</div>
+                        <div class="gx-card-meta">$3.99 (was $19.99) · Ends tomorrow</div>
+                        <div class="gx-card-description">
+                            Portal and Portal 2 bundle. Mind-bending puzzle platformers that will test your logic.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div class="gx-tab-content" id="gx-tab-calendar" style="display: none;">
+                <div class="gx-section">
+                    <div class="gx-section-title">
+                        <i data-lucide="calendar"></i>
+                        Upcoming Releases
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="release-calendar-item">
+                            <div class="release-date">
+                                <div class="release-date-day">15</div>
+                                <div class="release-date-month">MAY</div>
+                            </div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Horizon: Forbidden West Complete</div>
+                                <div class="gx-card-meta">PC Release · Action RPG</div>
+                                <div class="gx-card-description">
+                                    The complete edition arrives on PC with all DLC and enhancements.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="release-calendar-item">
+                            <div class="release-date">
+                                <div class="release-date-day">22</div>
+                                <div class="release-date-month">MAY</div>
+                            </div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Star Wars: Eclipse</div>
+                                <div class="gx-card-meta">Multi-Platform · Action Adventure</div>
+                                <div class="gx-card-description">
+                                    A new Star Wars adventure set in an unexplored era of the galaxy.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="release-calendar-item">
+                            <div class="release-date">
+                                <div class="release-date-day">01</div>
+                                <div class="release-date-month">JUN</div>
+                            </div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Final Fantasy XVI</div>
+                                <div class="gx-card-meta">PC Release · RPG</div>
+                                <div class="gx-card-description">
+                                    The latest mainline Final Fantasy comes to PC with enhanced graphics.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="release-calendar-item">
+                            <div class="release-date">
+                                <div class="release-date-day">10</div>
+                                <div class="release-date-month">JUN</div>
+                            </div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Assassin's Creed: Shadows</div>
+                                <div class="gx-card-meta">All Platforms · Action Adventure</div>
+                                <div class="gx-card-description">
+                                    Experience feudal Japan in the next chapter of Assassin's Creed.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trending Tab -->
+            <div class="gx-tab-content" id="gx-tab-trending" style="display: none;">
+                <div class="gx-section">
+                    <div class="gx-section-title">
+                        <i data-lucide="trending-up"></i>
+                        Trending Games
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="trending-game">
+                            <div class="trending-number">1</div>
+                            <div class="game-thumbnail">🎮</div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Elden Ring: Shadow of the Erdtree</div>
+                                <div class="gx-card-meta">500K+ playing now</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="trending-game">
+                            <div class="trending-number">2</div>
+                            <div class="game-thumbnail">🎯</div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Counter-Strike 2</div>
+                                <div class="gx-card-meta">450K+ playing now</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="trending-game">
+                            <div class="trending-number">3</div>
+                            <div class="game-thumbnail">⚔️</div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Baldur's Gate 3</div>
+                                <div class="gx-card-meta">380K+ playing now</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="trending-game">
+                            <div class="trending-number">4</div>
+                            <div class="game-thumbnail">🏎️</div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Forza Horizon 5</div>
+                                <div class="gx-card-meta">320K+ playing now</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gx-card">
+                        <div class="trending-game">
+                            <div class="trending-number">5</div>
+                            <div class="game-thumbnail">🎲</div>
+                            <div class="game-info">
+                                <div class="gx-card-title">Minecraft</div>
+                                <div class="gx-card-meta">300K+ playing now</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="settings-header">
+            <h2>Settings</h2>
+            <button class="close-settings" id="close-settings">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="settings-content">
+            <div class="setting-group">
+                <div class="setting-label">VPN</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="vpn-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <div class="vpn-modes">
+                    <button class="mode-btn active" data-mode="on">On</button>
+                    <button class="mode-btn" data-mode="stealth">Stealth</button>
+                    <button class="mode-btn" data-mode="secure">Secure</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">Background Animation</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="bg-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">Save Login Sessions</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="save-sessions-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <button class="btn-primary" id="clear-data">Clear Local Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const tabsContainer = document.getElementById('tabs-container');
+        const addTabBtn = document.getElementById('add-tab');
+        const browserContent = document.getElementById('browser-content');
+        const addressInput = document.getElementById('address-bar');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsToggle = document.getElementById('settings-btn');
+        const closeSettings = document.getElementById('close-settings');
+        const vpnToggle = document.getElementById('vpn-toggle');
+        const vpnBadge = document.getElementById('vpn-badge');
+        const saveSessionsToggle = document.getElementById('save-sessions-toggle');
+        
+        // GX Corner elements
+        const gxCornerBtn = document.getElementById('gx-corner-btn');
+        const gxCornerPanel = document.getElementById('gx-corner-panel');
+        const closeGxCorner = document.getElementById('close-gx-corner');
+
+        let tabs = [];
+        let activeTabId = null;
+        let tabCounter = 0;
+        let vpnEnabled = false;
+        let vpnMode = 'on';
+
+        const proxyAPI = 'https://api.allorigins.win/raw?url=';
+
+        function createTab() {
+            const id = 'tab-' + (++tabCounter);
+            const tab = {
+                id: id,
+                title: 'New Tab',
+                url: ''
+            };
+            tabs.push(tab);
+            activeTabId = id;
+
+            const viewDiv = document.createElement('div');
+            viewDiv.id = `view-${id}`;
+            viewDiv.className = 'tab-view';
+            browserContent.appendChild(viewDiv);
+
+            renderHomeScreen(id);
+            renderTabs();
+            switchTab(id);
+        }
+
+        function renderTabs() {
+            tabsContainer.innerHTML = '';
+            tabs.forEach(tab => {
+                const tabEl = document.createElement('div');
+                tabEl.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
+                tabEl.innerHTML = `
+                    <span class="tab-title">${tab.title}</span>
+                    <div class="close-tab">
+                        <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                    </div>
+                `;
+                tabEl.querySelector('.tab-title').onclick = () => switchTab(tab.id);
+                tabEl.querySelector('.close-tab').onclick = (e) => {
+                    e.stopPropagation();
+                    closeTab(tab.id);
+                };
+                tabsContainer.appendChild(tabEl);
+            });
+            lucide.createIcons();
+        }
+
+        function renderHomeScreen(id) {
+            const container = document.getElementById(`view-${id}`);
+            container.innerHTML = `
+                <div class="home-screen">
+                    <canvas id="background-canvas"></canvas>
+                    <div class="logo-container">
+                        <div class="logo">GX BROWSER</div>
+                        <div class="subtitle">Powered by BYEBLOCKER PROXY</div>
+                    </div>
+                    <div class="shortcuts">
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://discord.com')">
+                            <div class="shortcut-icon">💬</div>
+                            <div class="shortcut-title">Discord</div>
+                        </div>
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://youtube.com')">
+                            <div class="shortcut-icon">📺</div>
+                            <div class="shortcut-title">YouTube</div>
+                        </div>
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://twitter.com')">
+                            <div class="shortcut-icon">🐦</div>
+                            <div class="shortcut-title">Twitter</div>
+                        </div>
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://reddit.com')">
+                            <div class="shortcut-icon">🔴</div>
+                            <div class="shortcut-title">Reddit</div>
+                        </div>
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://twitch.tv')">
+                            <div class="shortcut-icon">🎮</div>
+                            <div class="shortcut-title">Twitch</div>
+                        </div>
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://github.com')">
+                            <div class="shortcut-icon">💻</div>
+                            <div class="shortcut-title">GitHub</div>
+                        </div>
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://spotify.com')">
+                            <div class="shortcut-icon">🎵</div>
+                            <div class="shortcut-title">Spotify</div>
+                        </div>
+                        <div class="shortcut" onclick="loadUrlInTab('${id}', 'https://instagram.com')">
+                            <div class="shortcut-icon">📷</div>
+                            <div class="shortcut-title">Instagram</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadUrlInTab(id, inputUrl) {
+            const url = normalizeUrl(inputUrl);
+            const tab = tabs.find(t => t.id === id);
+            if (tab) tab.url = url;
+            addressInput.value = url;
+
+            const container = document.getElementById(`view-${id}`);
+            container.innerHTML = `
+                <div class="home-screen">
+                    <div style="color: var(--gx-red); font-weight: bold;">BYEBLOCKER PROXY</div>
+                    <div style="font-size: 12px; color: var(--text-dim); margin-top: 5px;">Fetching ${url}...</div>
+                </div>
+            `;
+
+            fetch(proxyAPI + encodeURIComponent(url))
+                .then(response => {
+                    if (!response.ok) throw new Error('Proxy error');
+                    return response.text();
+                })
+                .then(html => {
+                    container.innerHTML = '';
+                    const iframe = document.createElement('iframe');
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.style.backgroundColor = '#fff';
+                    container.appendChild(iframe);
+
+                    const baseTag = `<base href="${url}">`;
+                    
+                    const injectionScript = `
+                        <script>
+                            document.addEventListener('click', function(e) {
+                                const link = e.target.closest('a');
+                                if (link && link.href && !link.href.startsWith('javascript:')) {
+                                    e.preventDefault();
+                                    window.parent.postMessage({type: 'nav', url: link.href, tabId: '${id}'}, '*');
+                                }
+                            }, true);
+
+                            document.addEventListener('submit', function(e) {
+                                const form = e.target;
+                                e.preventDefault();
+                                const formData = new FormData(form);
+                                const data = {};
+                                formData.forEach((value, key) => data[key] = value);
+                                
+                                if (window.parent.saveSessionsEnabled) {
+                                    const domain = new URL('${url}').hostname;
+                                    const savedData = JSON.parse(localStorage.getItem('bb_sessions') || '{}');
+                                    savedData[domain] = data;
+                                    localStorage.setItem('bb_sessions', JSON.stringify(savedData));
+                                }
+
+                                const action = new URL(form.action || '${url}', '${url}').href;
+                                window.parent.postMessage({type: 'nav', url: action, tabId: '${id}'}, '*');
+                            }, true);
+                        <\/script>
+                    `;
+
+                    const fixedHtml = html.replace('<head>', `<head>${baseTag}${injectionScript}`);
+                    
+                    const blob = new Blob([fixedHtml], {type: 'text/html'});
+                    iframe.src = URL.createObjectURL(blob);
+
+                    updateTabTitle(id, url);
+                })
+                .catch(err => {
+                    container.innerHTML = `
+                        <div class="home-screen">
+                            <div style="color: var(--gx-red); font-size: 24px; margin-bottom: 10px;">Connection Refused</div>
+                            <div style="color: var(--text-dim); margin-bottom: 20px;">The site ${url} refused to connect or is blocked.</div>
+                            <button class="nav-btn" style="background: var(--gx-red); color: white; padding: 8px 20px; border-radius: 4px;" onclick="renderHomeScreen('${id}')">Go Back</button>
+                        </div>
+                    `;
+                });
+        }
+
+        window.addEventListener('message', function(e) {
+            if (e.data.type === 'nav') {
+                loadUrlInTab(e.data.tabId, e.data.url);
+            }
+        });
+
+        window.saveSessionsEnabled = true;
+
+        function switchTab(id) {
+            activeTabId = id;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+            
+            const activeTab = tabs.find(t => t.id === id);
+            if (activeTab) {
+                renderTabs();
+                const viewEl = document.getElementById(`view-${id}`);
+                if (viewEl) viewEl.classList.add('active');
+                addressInput.value = activeTab.url;
+            }
+        }
+
+        function closeTab(id) {
+            const index = tabs.findIndex(t => t.id === id);
+            if (index === -1) return;
+
+            tabs.splice(index, 1);
+            const view = document.getElementById(`view-${id}`);
+            if (view) view.remove();
+
+            if (tabs.length === 0) {
+                createTab();
+            } else if (activeTabId === id) {
+                switchTab(tabs[Math.max(0, index - 1)].id);
+            } else {
+                renderTabs();
+            }
+        }
+
+        function updateTabTitle(id, url) {
+            const tab = tabs.find(t => t.id === id);
+            if (tab) {
+                try {
+                    const domain = new URL(normalizeUrl(url)).hostname;
+                    tab.title = domain;
+                } catch(e) {
+                    tab.title = url;
+                }
+                renderTabs();
+            }
+        }
+
+        function normalizeUrl(url) {
+            if (!url) return '';
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                if (url.includes('.') && !url.includes(' ')) return 'https://' + url;
+                return 'https://www.google.com/search?q=' + encodeURIComponent(url);
+            }
+            return url;
+        }
+
+        // --- GX Corner Functions ---
+        gxCornerBtn.onclick = () => {
+            gxCornerPanel.classList.toggle('open');
+        };
+
+        closeGxCorner.onclick = () => {
+            gxCornerPanel.classList.remove('open');
+        };
+
+        // GX Corner Tab Switching
+        document.querySelectorAll('.tab-gx').forEach(tab => {
+            tab.onclick = () => {
+                // Update active tab
+                document.querySelectorAll('.tab-gx').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show corresponding content
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('.gx-tab-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+                document.getElementById(`gx-tab-${tabName}`).style.display = 'block';
+            };
+        });
+
+        // Make cards clickable to load URLs
+        document.querySelectorAll('.gx-card').forEach(card => {
+            card.onclick = () => {
+                // In a real implementation, you could load game store pages
+                // For now, just show feedback
+                card.style.opacity = '0.7';
+                setTimeout(() => card.style.opacity = '1', 200);
+            };
+        });
+
+        // --- Event Listeners ---
+        addTabBtn.onclick = () => createTab();
+
+        addressInput.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                loadUrlInTab(activeTabId, addressInput.value);
+            }
+        };
+
+        vpnToggle.onchange = (e) => {
+            vpnEnabled = e.target.checked;
+            updateVPNBadge();
+        };
+
+        function updateVPNBadge() {
+            vpnBadge.className = 'vpn-badge';
+            if (vpnEnabled) {
+                vpnBadge.classList.add('active');
+                if (vpnMode === 'stealth') vpnBadge.classList.add('stealth');
+                if (vpnMode === 'secure') vpnBadge.classList.add('secure');
+                vpnBadge.innerText = `VPN ${vpnMode.toUpperCase()}`;
+            } else {
+                vpnBadge.innerText = 'VPN';
+            }
+        }
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                vpnMode = btn.dataset.mode;
+                updateVPNBadge();
+            };
+        });
+
+        settingsToggle.onclick = () => settingsPanel.classList.add('open');
+        closeSettings.onclick = () => settingsPanel.classList.remove('open');
+        saveSessionsToggle.onchange = (e) => window.saveSessionsEnabled = e.target.checked;
+        
+        document.getElementById('clear-data').onclick = () => {
+            localStorage.removeItem('bb_sessions');
+            alert('Local session data cleared.');
+        };
+
+        document.getElementById('home-btn').onclick = () => renderHomeScreen(activeTabId);
+        document.getElementById('refresh-btn').onclick = () => {
+            const tab = tabs.find(t => t.id === activeTabId);
+            if (tab && tab.url) loadUrlInTab(activeTabId, tab.url);
+        };
+
+        // --- Background Animation ---
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let bgEnabled = true;
+
+        document.getElementById('bg-toggle').onchange = (e) => bgEnabled = e.target.checked;
+
+        function initStars() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    speed: Math.random() * 0.5,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function animate() {
+            if (bgEnabled) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(star => {
+                    ctx.fillStyle = `rgba(250, 30, 78, ${star.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    star.y -= star.speed;
+                    if (star.y < 0) star.y = canvas.height;
+                });
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.onresize = initStars;
+        initStars();
+        animate();
+
+        createTab();
+    </script>
+</body>
+</html>
